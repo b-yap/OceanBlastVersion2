@@ -12,10 +12,11 @@ package school.project.game.meerusa.oceanblastversion2.SCENES;
 
 import org.andengine.entity.scene.Scene;
 
+import school.project.game.meerusa.oceanblastversion2.SceneManager;
+
 public interface ISceneCreator {
 	Scene mScene=new Scene();
-	
-	public void createScene();
+	public void createScene(SceneManager sceneManager);
 	public Scene getScene();
 
 }

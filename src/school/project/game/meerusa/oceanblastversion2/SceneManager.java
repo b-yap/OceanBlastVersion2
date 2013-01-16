@@ -13,26 +13,23 @@ package school.project.game.meerusa.oceanblastversion2;
 import org.andengine.engine.Engine;
 import org.andengine.entity.scene.Scene;
 import org.andengine.entity.scene.background.Background;
+import org.andengine.entity.sprite.ButtonSprite;
+import org.andengine.entity.sprite.ButtonSprite.OnClickListener;
 import org.andengine.ui.activity.BaseGameActivity;
 
-import school.project.game.meerusa.oceanblastversion2.SCENES.TitleScene;
+import android.util.Log;
+
+import school.project.game.meerusa.oceanblastversion2.SCENES.ISceneCreator;
+import school.project.game.meerusa.oceanblastversion2.SCENES.MainScene;
 
 public class SceneManager {
 
-	private SceneType currentScene;
+	private ConstantsList.SceneType currentScene;
 	private BaseGameActivity mainActivity;
 	private Engine mEngine;
 		
-	//private Scene titleScene;
-	private TitleScene titleScene;
-    private Scene mainGameScene;
-
-	public enum SceneType
-	{
-		SPLASH,
-		TITLE,
-		MAINGAME
-	}
+	public ISceneCreator menuScene;
+    public Scene mainGameScene;
 
 	public SceneManager(BaseGameActivity activity, Engine engine) {
 		this.mEngine = engine;
@@ -41,14 +38,13 @@ public class SceneManager {
 
 	//Method loads all of the resources for the game scenes
 	public void loadGameSceneResources() {
-		titleScene = new TitleScene(mainActivity);
+		menuScene = new MainScene(mainActivity);
 	}
 
 	//Method creates all of the Game Scenes
 	public void createGameScenes() {
 		//Create the Title Scene
-		titleScene.createScene();
-
+		menuScene.createScene(this);
 		//Create the Main Game Scene and set background colour to blue
 		mainGameScene = new Scene();
 		mainGameScene.setBackground(new Background(0, 0, 1));
@@ -56,25 +52,31 @@ public class SceneManager {
 	}
 
 	//Method allows you to get the currently active scene
-	public SceneType getCurrentScene() {
+	public ConstantsList.SceneType getCurrentScene() {
 		return currentScene;
-	}
+	}	
 
 	//Method allows you to set the currently active scene
-	public void setCurrentScene(SceneType scene) {
+	public void setCurrentScene(ConstantsList.SceneType scene) {
 		currentScene = scene;
 		switch (scene)
 		{
 		case SPLASH:
 			break;
-		case TITLE:
-			mEngine.setScene(titleScene.getScene());
-			break;
-		case MAINGAME:
+		case MENU:
+			{mEngine.setScene(menuScene.getScene());
+			
+			 Log.d("------------------------END HERE-----------------------", " ");
+			break;}
+			
+		case MAINGAME:{
 			mEngine.setScene(mainGameScene);
+			 Log.d("------------------------END HERE 3-----------------------", " ");
 			break;
+			}
 		}
 	}
+	
 
 }
 

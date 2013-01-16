@@ -11,6 +11,7 @@
 package school.project.game.meerusa.oceanblastversion2;
 
 
+import org.andengine.engine.Engine;
 import org.andengine.engine.camera.Camera;
 import org.andengine.engine.handler.timer.ITimerCallback;
 import org.andengine.engine.handler.timer.TimerHandler;
@@ -28,17 +29,12 @@ import org.andengine.ui.activity.BaseGameActivity;
 
 import android.util.Log;
 
-import school.project.game.meerusa.oceanblastversion2.SceneManager.SceneType;
-
-
 public class GameActivity extends BaseGameActivity
 {
-		private static int CAMERA_WIDTH=800 ;
-		private static int CAMERA_HEIGHT=480;
-
 		private Camera camera;
 		private Scene splashScene;
-		private SceneManager sceneManager;
+		public SceneManager sceneManager;
+		
 		    private BitmapTextureAtlas splashTextureAtlas;
 		    private ITextureRegion splashTextureRegion;
 		    private Sprite splash;
@@ -46,8 +42,9 @@ public class GameActivity extends BaseGameActivity
 		public EngineOptions onCreateEngineOptions()
 		{
 		Log.d("-------onCreateEngineOptions()---------", " ");
-				camera = new Camera(0, 0, CAMERA_WIDTH, CAMERA_HEIGHT);
+				camera = new Camera(0, 0, ConstantsList.CAMERA_WIDTH, ConstantsList.CAMERA_HEIGHT);
 		EngineOptions engineOptions = new EngineOptions(true, ScreenOrientation.LANDSCAPE_FIXED, new FillResolutionPolicy(), camera);
+		engineOptions.getAudioOptions().setNeedsMusic(true);
 		return engineOptions;
 		}
 
@@ -67,7 +64,7 @@ public class GameActivity extends BaseGameActivity
 		{
 		Log.d("-------onCreateScene()---------", " ");
 		initSplashScene();
-		sceneManager.setCurrentScene(SceneType.SPLASH);
+		sceneManager.setCurrentScene(ConstantsList.SceneType.SPLASH);
 		        pOnCreateSceneCallback.onCreateSceneFinished(this.splashScene);
 		}
 
@@ -86,14 +83,14 @@ public class GameActivity extends BaseGameActivity
 			                splash.dispose();
 			              /*  mEngine.setScene(mainScene);
 			                currentScene = SceneType.MAIN;  */
-			                sceneManager.setCurrentScene(SceneType.TITLE);
-						
+			                sceneManager.setCurrentScene(ConstantsList.SceneType.MENU);
+			   			 Log.d("------------------------END HERE 2--------------", " ");
+			   			
 					}
 		}));
 		 
 		pOnPopulateSceneCallback.onPopulateSceneFinished();
 		}
-
 
 		public void loadResources()
 		{
@@ -127,7 +124,9 @@ public class GameActivity extends BaseGameActivity
 		    };
 		   
 		    splash.setScale(1.5f);
-		    splash.setPosition((CAMERA_WIDTH - splash.getWidth()) * 0.5f, (CAMERA_HEIGHT - splash.getHeight()) * 0.5f);
+		    splash.setPosition((ConstantsList.CAMERA_WIDTH - splash.getWidth()) * 0.5f, (ConstantsList.CAMERA_HEIGHT - splash.getHeight()) * 0.5f);
 		    splashScene.attachChild(splash);
 		}
+		
+
 	}
