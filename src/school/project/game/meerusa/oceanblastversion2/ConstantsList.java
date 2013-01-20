@@ -18,7 +18,8 @@ public class ConstantsList {
 	{
 		SPLASH,
 		MENU,
-		MAINGAME
+		MAINGAME,
+		SCORE,
 	}
 	
 }

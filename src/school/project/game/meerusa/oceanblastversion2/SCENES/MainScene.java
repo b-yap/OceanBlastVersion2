@@ -12,21 +12,19 @@ package school.project.game.meerusa.oceanblastversion2.SCENES;
 
 import java.io.IOException;
 
-import org.andengine.opengl.font.Font;
-import org.andengine.opengl.font.FontFactory;
-import org.andengine.util.HorizontalAlign;
 import org.andengine.audio.music.Music;
 import org.andengine.audio.music.MusicFactory;
 import org.andengine.entity.sprite.ButtonSprite;
 import org.andengine.entity.sprite.Sprite;
 import org.andengine.entity.sprite.ButtonSprite.OnClickListener;
-import org.andengine.entity.text.Text;
 import org.andengine.entity.scene.Scene;
-import org.andengine.entity.text.TextOptions;
 import org.andengine.ui.activity.BaseGameActivity;
 import org.andengine.opengl.texture.region.TextureRegion;
+import org.andengine.opengl.texture.region.TiledTextureRegion;
 import org.andengine.opengl.texture.atlas.bitmap.BitmapTextureAtlas;
 import org.andengine.opengl.texture.atlas.bitmap.BitmapTextureAtlasTextureRegionFactory;
+
+import ViewsExtensions.AnimatedButtonSprite;
 
 import school.project.game.meerusa.oceanblastversion2.ConstantsList;
 import school.project.game.meerusa.oceanblastversion2.SceneManager;
@@ -36,6 +34,7 @@ public class MainScene implements ISceneCreator
 	private BaseGameActivity mActivity;
 	private Music mMusic;
 	private SceneManager manager;
+	private Scene mScene=new Scene();
 	//background
 	private TextureRegion 		backgroundTextureRegion;
 	private BitmapTextureAtlas 	backgroundAtlas;
@@ -44,13 +43,16 @@ public class MainScene implements ISceneCreator
 	private BitmapTextureAtlas 	buttonAtlas;
 	private TextureRegion 		playButtonRegion;
 	private TextureRegion 		playPushedButtonRegion;
-	private TextureRegion 		soundOnButtonRegion;
-	private TextureRegion 		soundOffButtonRegion;
-	
+	private TextureRegion		soundButtonRegion;
+	private TextureRegion 		onRegion;
+	private TextureRegion 		offRegion;
 	//sprites
-	public Sprite oBackground;
-	public Sprite playButton;
-	public Sprite soundButton;
+	private Sprite oBackground;
+	private Sprite playButton;
+	private ButtonSprite soundButton;
+	private Sprite onButton;
+	private Sprite offButton;
+	
 	
 	//constructor - load resources
 	public MainScene(BaseGameActivity activity)
@@ -64,12 +66,13 @@ public class MainScene implements ISceneCreator
 		backgroundAtlas.load();		
 		
 		//menu buttons
-		buttonAtlas	= new BitmapTextureAtlas(mActivity.getTextureManager(),400,410);
+		buttonAtlas	= new BitmapTextureAtlas(mActivity.getTextureManager(),400,435);
 			playButtonRegion 		= BitmapTextureAtlasTextureRegionFactory.createFromAsset(buttonAtlas, mActivity,"playBig.png",0,0);
 			playPushedButtonRegion 	= BitmapTextureAtlasTextureRegionFactory.createFromAsset(buttonAtlas, mActivity,"playBigPushed.png",0,151);
-			soundOnButtonRegion 	= BitmapTextureAtlasTextureRegionFactory.createFromAsset(buttonAtlas, mActivity,"soundOn.png",0,303);
-			soundOffButtonRegion 	= BitmapTextureAtlasTextureRegionFactory.createFromAsset(buttonAtlas, mActivity,"soundOff.png",0,352);
-		buttonAtlas.load();
+			onRegion 				= BitmapTextureAtlasTextureRegionFactory.createFromAsset(buttonAtlas, mActivity,"on.png",0,303);
+			offRegion 				= BitmapTextureAtlasTextureRegionFactory.createFromAsset(buttonAtlas, mActivity,"off.png",0,353);
+			soundButtonRegion 		= BitmapTextureAtlasTextureRegionFactory.createFromAsset(buttonAtlas, mActivity,"soundToggles.png",0,405);
+			buttonAtlas.load();
 		
 		
 		//add music
@@ -98,10 +101,17 @@ public class MainScene implements ISceneCreator
 			//play Music
 			public void onClick(ButtonSprite pButtonSprite, float pTouchAreaLocalX,
 					float pTouchAreaLocalY) {
-				if(mMusic.isPlaying())
+				if(mMusic.isPlaying()){	
+					onButton.setVisible(false);
+					offButton.setVisible(true);
 					mMusic.pause();
-				else
-					mMusic.play();	
+				}
+				else{	
+					mMusic.play();
+					onButton.setVisible(true);
+					offButton.setVisible(false);
+				}
+				
 			}
 		};
 		
@@ -124,16 +134,22 @@ public class MainScene implements ISceneCreator
 		mScene.setTouchAreaBindingOnActionDownEnabled(true);
 		mScene.attachChild(playButton);
 		
-		soundButton = new ButtonSprite(600,380,this.soundOnButtonRegion,this.soundOnButtonRegion,mActivity.getVertexBufferObjectManager(), musicListener);		
+		//music
+		soundButton = new ButtonSprite(600,380,this.soundButtonRegion,mActivity.getVertexBufferObjectManager(), musicListener);		
 		mScene.registerTouchArea(soundButton);
+		mScene.attachChild(soundButton);
 		mScene.setTouchAreaBindingOnActionDownEnabled(true);
-		mScene.attachChild(soundButton); 
+		
+		onButton = new ButtonSprite(600,400,this.onRegion,mActivity.getVertexBufferObjectManager());	
+		offButton= new ButtonSprite (600,400,this.offRegion, mActivity.getVertexBufferObjectManager());
+		mScene.attachChild(onButton);
+		mScene.attachChild(offButton);
+		onButton.setVisible(true);
+		offButton.setVisible(false);
+		mMusic.play();
 	}
 	
 	private void dispatch(){
-		mScene.detachChildren();
-		mScene.detachSelf();
-		mScene.dispose();
 		this.manager.setCurrentScene(ConstantsList.SceneType.MAINGAME);
 	}
 
