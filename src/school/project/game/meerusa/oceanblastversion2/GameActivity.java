@@ -48,6 +48,8 @@ public class GameActivity extends BaseGameActivity
 				camera = new Camera(0, 0, ConstantsList.CAMERA_WIDTH, ConstantsList.CAMERA_HEIGHT);
 		EngineOptions engineOptions = new EngineOptions(true, ScreenOrientation.LANDSCAPE_FIXED, new FillResolutionPolicy(), camera);
 		engineOptions.getAudioOptions().setNeedsMusic(true);
+		engineOptions.getTouchOptions().setNeedsMultiTouch(true);
+
 		if(MultiTouch.isSupported(this)) {
 			if(MultiTouch.isSupportedDistinct(this)) {
 				Toast.makeText(this, "MultiTouch detected --> Both controls will work properly!", Toast.LENGTH_SHORT).show();

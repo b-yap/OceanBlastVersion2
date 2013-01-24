@@ -14,13 +14,19 @@ import org.andengine.engine.camera.Camera;
 import org.andengine.engine.camera.hud.controls.AnalogOnScreenControl;
 import org.andengine.engine.camera.hud.controls.BaseOnScreenControl;
 import org.andengine.engine.camera.hud.controls.AnalogOnScreenControl.IAnalogOnScreenControlListener;
+import org.andengine.engine.handler.IUpdateHandler;
 import org.andengine.engine.handler.physics.PhysicsHandler;
 import org.andengine.entity.modifier.ScaleModifier;
 import org.andengine.entity.modifier.SequenceEntityModifier;
+import org.andengine.entity.primitive.Rectangle;
 import org.andengine.entity.scene.Scene;
 import org.andengine.entity.scene.background.AutoParallaxBackground;
 import org.andengine.entity.scene.background.ParallaxBackground.ParallaxEntity;
+import org.andengine.entity.sprite.ButtonSprite;
 import org.andengine.entity.sprite.Sprite;
+import org.andengine.entity.sprite.ButtonSprite.OnClickListener;
+import org.andengine.entity.text.Text;
+import org.andengine.entity.text.TextOptions;
 import org.andengine.opengl.texture.TextureOptions;
 import org.andengine.opengl.texture.atlas.bitmap.BitmapTextureAtlas;
 import org.andengine.opengl.texture.atlas.bitmap.BitmapTextureAtlasTextureRegionFactory;
@@ -33,23 +39,35 @@ import org.andengine.opengl.texture.region.TextureRegion;
 import org.andengine.opengl.texture.region.TiledTextureRegion;
 import org.andengine.opengl.vbo.VertexBufferObjectManager;
 import org.andengine.ui.activity.BaseGameActivity;
+import org.andengine.util.HorizontalAlign;
 import org.andengine.util.debug.Debug;
-
 import android.opengl.GLES20;
+import android.util.Log;
 
 import school.project.game.meerusa.oceanblastversion2.ConstantsList;
 import school.project.game.meerusa.oceanblastversion2.SceneManager;
 
-public class MainGameScene implements ISceneCreator {
+public class MainGameScene implements ISceneCreator  {
 
 	private BaseGameActivity mActivity;
 	private VertexBufferObjectManager vertextBufferObjectManager;
 	private PhysicsHandler physicsHandler;
 	private Camera mCamera;
 	private Scene mScene=new Scene();
+	
 	//player
 		private BitmapTextureAtlas playerAtlas;
 		private TiledTextureRegion submarineRegion;
+	
+	//enemy
+		private  BuildableBitmapTextureAtlas animatedEnemyAtlas;
+		private  TiledTextureRegion goldfishRegion;
+		
+	//pellet
+		private BuildableBitmapTextureAtlas mShootTextureAtlas;
+		private ITextureRegion mFace1TextureRegion;
+		private ITextureRegion mFace2TextureRegion;
+		private ITextureRegion mFace3TextureRegion;
 		
 	//parallax background
 		private BitmapTextureAtlas autoParallaxAtlas;
@@ -64,6 +82,8 @@ public class MainGameScene implements ISceneCreator {
 	//sprites
 		private AutoParallaxBackground autoParallaxBackground;
 		private Sprite userPlayer;
+		private Enemy goldfish;
+		
 	
 	public MainGameScene(BaseGameActivity activity, Camera camera){
 		this.mActivity = activity;
@@ -92,7 +112,29 @@ public class MainGameScene implements ISceneCreator {
 										mActivity, "onscreen_control_knob.png", 128, 0);
 		onScreenControlAtlas.load();
 				
+		this.mShootTextureAtlas = new BuildableBitmapTextureAtlas(mActivity.getTextureManager(), 512, 512);
+		this.mFace1TextureRegion = BitmapTextureAtlasTextureRegionFactory.createFromAsset(this.mShootTextureAtlas, mActivity, "face_box_tiled.png");
+		this.mFace2TextureRegion = BitmapTextureAtlasTextureRegionFactory.createFromAsset(this.mShootTextureAtlas, mActivity, "face_circle_tiled.png");
+		this.mFace3TextureRegion = BitmapTextureAtlasTextureRegionFactory.createFromAsset(this.mShootTextureAtlas, mActivity, "face_hexagon_tiled.png");
+		
+		try {
+			this.mShootTextureAtlas.build(new BlackPawnTextureAtlasBuilder<IBitmapTextureAtlasSource, BitmapTextureAtlas>(0, 0, 0));
+			this.mShootTextureAtlas.load();
+		} catch (TextureAtlasBuilderException e) {
+			Debug.e(e);
+		}
+		
+		//animated sprite: enemies
+				this.animatedEnemyAtlas = new BuildableBitmapTextureAtlas(mActivity.getTextureManager(), 512, 256, TextureOptions.NEAREST);
+				goldfishRegion = BitmapTextureAtlasTextureRegionFactory.createTiledFromAsset(animatedEnemyAtlas, 
+								 mActivity, "goldfish_tiled.png",2,1);
 				
+				try {
+					this.animatedEnemyAtlas.build(new BlackPawnTextureAtlasBuilder<IBitmapTextureAtlasSource, BitmapTextureAtlas>(0, 0, 1));
+					this.animatedEnemyAtlas.load();
+				} catch (TextureAtlasBuilderException e) {
+					Debug.e(e);
+				}
 		
 	}
 	
@@ -100,8 +142,9 @@ public class MainGameScene implements ISceneCreator {
 		//adjustment
 		final int centerX=(ConstantsList.CAMERA_WIDTH - playerAtlas.getWidth())/2;
 		final int centerY=(ConstantsList.CAMERA_HEIGHT - playerAtlas.getHeight())/2;	
-		 this.vertextBufferObjectManager = mActivity.getVertexBufferObjectManager();
-		//background
+		this.vertextBufferObjectManager = mActivity.getVertexBufferObjectManager();
+		
+		 //background
 		 autoParallaxBackground = new AutoParallaxBackground(0, 0, 0, 5);
 		 autoParallaxBackground.attachParallaxEntity(new ParallaxEntity(0.0f, new Sprite(0, ConstantsList.CAMERA_HEIGHT - 
 				 this.parallaxLayerBack.getHeight(),this.parallaxLayerBack, this.vertextBufferObjectManager)));
@@ -115,13 +158,93 @@ public class MainGameScene implements ISceneCreator {
 		 userPlayer.registerUpdateHandler(physicsHandler);
 		 mScene.attachChild(userPlayer);
 		
+		//enemy
+	    goldfish = new Enemy(650,50,this.goldfishRegion,this.vertextBufferObjectManager,-100);
+		goldfish.animation(200);
+		final PhysicsHandler physicsHand = new PhysicsHandler(goldfish);
+		goldfish.registerUpdateHandler(physicsHand);
+		mScene.attachChild(goldfish);
+			
 		controls();
+		pelletShooting();
+		
+		mScene.registerUpdateHandler(new IUpdateHandler() {
+			public void reset() { }
+
+			public void onUpdate(final float pSecondsElapsed) {
+				//final Text centerText = new Text(350, 240, null, "Game Over!!", new TextOptions(HorizontalAlign.CENTER),vertextBufferObjectManager );				
+				if(userPlayer.collidesWith(goldfish)) {
+					Log.d("gameOver!", " ");
+				}else{}
+				
+				
+				if(!mCamera.isRectangularShapeVisible(userPlayer)) {
+					//nothing
+				}
+			}
+		});
 	}
 
 	public Scene getScene() {
 		// TODO Auto-generated method stub
 		return this.mScene;
 	}
+	private void pelletShooting(){
+		// shoot bullet listener
+		
+		OnClickListener shootListener = new OnClickListener() {
+			
+			public void onClick(ButtonSprite pButtonSprite, float pTouchAreaLocalX,
+					float pTouchAreaLocalY) {
+				//the bullet
+			final Rectangle bullet = new Rectangle(userPlayer.getX()+100,userPlayer.getY()+50, 32, 32, vertextBufferObjectManager);
+				bullet.setColor(1,0,0);
+				PhysicsHandler bulletHandler = new PhysicsHandler(bullet);
+				bulletHandler.setVelocityX(100);
+				bullet.registerUpdateHandler(bulletHandler);
+				mScene.attachChild(bullet);
+				
+				mScene.registerUpdateHandler(new IUpdateHandler() {
+					public void reset() { 
+											}
+
+					public void onUpdate(final float pSecondsElapsed) {							
+						if(bullet.collidesWith(goldfish)){
+							mActivity.runOnUpdateThread(new Runnable(){
+
+								@Override
+								public void run() {
+									mScene.detachChild(bullet);
+									Log.d("hit!", " ");
+								}
+								
+							});	 
+							
+							//bullet.dispose();
+//								//bullet.detachSelf();
+//								//bullet = null;
+//								mScene.detachChild(bullet);
+//								//bullet.setIgnoreUpdate(true);
+//								bullet.clearEntityModifiers();
+//								bullet.clearUpdateHandlers();		
+								
+						}	
+					
+					}
+					
+					
+				});					
+			}
+		};
+		
+		//the shoot button
+		final Sprite fire = new ButtonSprite(700, 420, this.mFace1TextureRegion, 
+				this.mFace2TextureRegion, this.mFace3TextureRegion, this.vertextBufferObjectManager,shootListener);
+		mScene.registerTouchArea(fire);
+		mScene.attachChild(fire);
+		mScene.setTouchAreaBindingOnActionDownEnabled(true);
+	}
+
 	
 	private void controls(){
 		final AnalogOnScreenControl analogOnScreenControl = new AnalogOnScreenControl(15, ConstantsList.CAMERA_HEIGHT -  
@@ -189,7 +312,6 @@ public class MainGameScene implements ISceneCreator {
 						}		
 				} // end of onControlChange
 
-
 					public void onControlClick(AnalogOnScreenControl pAnalogOnScreenControl) {
 						userPlayer.registerEntityModifier(new SequenceEntityModifier(new ScaleModifier(0.25f, 1, 1.5f), new ScaleModifier(0.25f, 1.5f, 1)));
 						
@@ -202,11 +324,27 @@ public class MainGameScene implements ISceneCreator {
 		analogOnScreenControl.getControlKnob().setScale(1.25f);
 		analogOnScreenControl.refreshControlKnobPosition();
 		
-		mScene.setChildScene(analogOnScreenControl);
-		//mScene.attachChild(analogOnScreenControl);
-		
-		
+		mScene.setChildScene(analogOnScreenControl);			
 	}
+	
+//	private void removeSprite(Sprite s) {
+//        if ( s == null) {
+//            return;
+//        }
+//
+//        nmys.remove(s);
+//        nmys_r.remove(s);
+//
+//        runOnUpdateThread(new Runnable() {
+//            @Override
+//            public void run() {
+//                    /* Now it is save to remove the entity! */
+//                    mEngine.getScene().getTopLayer().removeEntity(s);
+//                    BufferObjectManager.getActiveInstance().unloadBufferObject(s.getVertexBuffer());
+//            }
+//        });
+//
+//    }
 
 }
 
