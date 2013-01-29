@@ -71,7 +71,7 @@ public class GameActivity extends BaseGameActivity
 		Log.d("-------onCreateResources()---------", " ");
 		sceneManager = new SceneManager(this,this.mEngine, this.camera);
 		BitmapTextureAtlasTextureRegionFactory.setAssetBasePath("gfx/");
-		        splashTextureAtlas = new BitmapTextureAtlas(this.getTextureManager(), 256, 256, TextureOptions.DEFAULT);
+		        splashTextureAtlas = new BitmapTextureAtlas(this.getTextureManager(), 640, 300, TextureOptions.DEFAULT);
 		        splashTextureRegion = BitmapTextureAtlasTextureRegionFactory.createFromAsset(splashTextureAtlas, this, "splash.png", 0, 0);
 		        splashTextureAtlas.load();
 		     
@@ -93,14 +93,11 @@ public class GameActivity extends BaseGameActivity
 		{
 
 					public void onTimePassed(TimerHandler pTimerHandler) {
-						// TODO Auto-generated method stub
-						  mEngine.unregisterUpdateHandler(pTimerHandler);
+				  		  	mEngine.unregisterUpdateHandler(pTimerHandler);
 			                loadResources();
 			                loadScenes();        
 			                splash.detachSelf();
 			                splash.dispose();
-			              /*  mEngine.setScene(mainScene);
-			                currentScene = SceneType.MAIN;  */
 			                sceneManager.setCurrentScene(ConstantsList.SceneType.MENU);
 			   			 Log.d("------------------------END HERE 2--------------", " ");
 			   			
@@ -122,11 +119,9 @@ public class GameActivity extends BaseGameActivity
 		Log.d("-------loadScenes()---------", " ");
 				sceneManager.createGameScenes();
 		}
-		
-		public Camera getCamera(){
-			return this.camera;
-		}
 
+		
+		
 		// ===========================================================
 		// INITIALIZE
 		// ===========================================================
@@ -145,7 +140,6 @@ public class GameActivity extends BaseGameActivity
 		            }
 		    };
 		   
-		    splash.setScale(1.5f);
 		    splash.setPosition((ConstantsList.CAMERA_WIDTH - splash.getWidth()) * 0.5f, (ConstantsList.CAMERA_HEIGHT - splash.getHeight()) * 0.5f);
 		    splashScene.attachChild(splash);
 		}

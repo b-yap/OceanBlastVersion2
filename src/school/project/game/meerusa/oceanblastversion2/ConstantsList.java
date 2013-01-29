@@ -20,6 +20,7 @@ public class ConstantsList {
 		MENU,
 		MAINGAME,
 		SCORE,
+		PAUSE
 	}
 	
 }

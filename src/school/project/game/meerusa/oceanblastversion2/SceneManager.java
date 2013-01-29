@@ -21,8 +21,9 @@ import org.andengine.ui.activity.BaseGameActivity;
 import android.util.Log;
 
 import school.project.game.meerusa.oceanblastversion2.SCENES.ISceneCreator;
-import school.project.game.meerusa.oceanblastversion2.SCENES.MainGameScene;
-import school.project.game.meerusa.oceanblastversion2.SCENES.MainScene;
+import school.project.game.meerusa.oceanblastversion2.SCENES.GameScene;
+import school.project.game.meerusa.oceanblastversion2.SCENES.MenuScene;
+import school.project.game.meerusa.oceanblastversion2.SCENES.PauseScene;
 import school.project.game.meerusa.oceanblastversion2.SCENES.ScoreObserver;
 
 public class SceneManager implements ILoaderObserver {
@@ -33,9 +34,10 @@ public class SceneManager implements ILoaderObserver {
 	private Camera mCamera;
 	private ArrayList<IObserver> observers= new ArrayList<IObserver>();
 	private IObserver scoreObserver; 
-	public ISceneCreator menuScene;
-	public ISceneCreator gameScene;
-    public Scene mainGameScene;
+	private ISceneCreator menuScreen;
+	private ISceneCreator gameScreen;
+	private ISceneCreator pauseScreen;
+	
 
 	public SceneManager(BaseGameActivity activity, Engine engine, Camera camera) {
 		this.mEngine = engine;
@@ -47,18 +49,16 @@ public class SceneManager implements ILoaderObserver {
 
 	//Method loads all of the resources for the game scenes
 	public void loadGameSceneResources() {
-		menuScene = new MainScene(mainActivity);
-		gameScene = new MainGameScene(mainActivity, this.mCamera);
+		menuScreen = new MenuScene(mainActivity);
+		gameScreen = new GameScene(mainActivity, this.mCamera);
+		pauseScreen = new PauseScene(mainActivity, this.mCamera, this.mEngine);
 		}
 
 	//Method creates all of the Game Scenes
 	public void createGameScenes() {
-		//Create the Title Scene
-		menuScene.createScene(this);
-		gameScene.createScene(this);
-		//Create the Main Game Scene and set background colour to blue
-		mainGameScene = new Scene();
-		mainGameScene.setBackground(new Background(0, 0, 1));
+		menuScreen.createScene(this);
+		gameScreen.createScene(this);
+		pauseScreen.createScene(this);
 		}
 
 	//Method allows you to get the currently active scene
@@ -74,21 +74,28 @@ public class SceneManager implements ILoaderObserver {
 		case SPLASH:
 			break;
 		case MENU:
-			{mEngine.setScene(menuScene.getScene());
-			
+			{mEngine.setScene(menuScreen.getScene());			
 			 Log.d("set Menu", " ");
 			break;
 			}
 		case MAINGAME:{
 			notifyObservers();
-			mEngine.setScene(gameScene.getScene());
+			gameScreen.getScene().setIgnoreUpdate(false);
+			gameScreen.getScene().clearChildScene();
+			mEngine.setScene(gameScreen.getScene());
 			 Log.d("set Main game", " ");
 			break;
 			}
 		case SCORE:{
 			Log.d("Scoring", " ");
 			break;
-		
+		}
+		case PAUSE:{	
+			gameScreen.getScene().setIgnoreUpdate(true);
+			gameScreen.getScene().setChildScene(pauseScreen.getScene(),false, true,true);
+			Log.d("paused", "done");
+			
+			break;
 		}
 	}
 	}
