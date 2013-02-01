@@ -27,6 +27,8 @@ import org.andengine.entity.sprite.Sprite;
 import org.andengine.entity.sprite.ButtonSprite.OnClickListener;
 import org.andengine.entity.text.Text;
 import org.andengine.entity.text.TextOptions;
+import org.andengine.opengl.font.Font;
+import org.andengine.opengl.font.FontFactory;
 import org.andengine.opengl.texture.TextureOptions;
 import org.andengine.opengl.texture.atlas.bitmap.BitmapTextureAtlas;
 import org.andengine.opengl.texture.atlas.bitmap.BitmapTextureAtlasTextureRegionFactory;
@@ -41,6 +43,8 @@ import org.andengine.opengl.vbo.VertexBufferObjectManager;
 import org.andengine.ui.activity.BaseGameActivity;
 import org.andengine.util.HorizontalAlign;
 import org.andengine.util.debug.Debug;
+
+import android.graphics.Typeface;
 import android.opengl.GLES20;
 import android.util.Log;
 
@@ -49,17 +53,21 @@ import school.project.game.meerusa.oceanblastversion2.SceneManager;
 
 public class GameScene implements ISceneCreator  {
 
+	
 	private BaseGameActivity mActivity;
 	private VertexBufferObjectManager vertextBufferObjectManager;
 	private PhysicsHandler physicsHandler;
 	private SceneManager manager;
 	private Camera mCamera;
+	private int mScore=0;
 	private Scene mScene=new Scene();
+	private Font mFont;
 	
 	//player
 		private BitmapTextureAtlas playerAtlas;
 		private TiledTextureRegion submarineRegion;
-	
+		private TextureRegion pelletRegion;
+		
 	//enemy
 		private  BuildableBitmapTextureAtlas animatedEnemyAtlas;
 		private  TiledTextureRegion goldfishRegion;
@@ -69,13 +77,10 @@ public class GameScene implements ISceneCreator  {
 		private ITextureRegion mFace1TextureRegion;
 		private ITextureRegion mFace2TextureRegion;
 		
-
 	//pause button
 		private  BitmapTextureAtlas pauseAtlas;
 		private  TextureRegion pauseRegion;
-		
 				
-		
 	//parallax background
 		private BitmapTextureAtlas autoParallaxAtlas;
 		private ITextureRegion parallaxLayerBack;
@@ -91,7 +96,7 @@ public class GameScene implements ISceneCreator  {
 		private Sprite userPlayer;
 		private ButtonSprite pauseButton;
 		private Enemy goldfish;
-		
+		private Text scoreText;
 	//controls
 		private AnalogOnScreenControl analogOnScreenControl;
 	
@@ -106,7 +111,13 @@ public class GameScene implements ISceneCreator  {
 		playerAtlas = new BitmapTextureAtlas(mActivity.getTextureManager(),200,200);
 			submarineRegion = BitmapTextureAtlasTextureRegionFactory.createTiledFromAsset(this.playerAtlas,
 							mActivity,"submarine.png",0,0,1,1);
-		playerAtlas.load();
+			pelletRegion =BitmapTextureAtlasTextureRegionFactory.createFromAsset(this.playerAtlas,
+					mActivity,"pellet.png",0,118);
+			playerAtlas.load();
+		
+		//font
+		this.mFont = FontFactory.create(mActivity.getFontManager(), mActivity.getTextureManager(), 256, 256, Typeface.create(Typeface.DEFAULT, Typeface.BOLD), 32);
+		this.mFont.load();
 			
 		//pause  button
 		pauseAtlas = new BitmapTextureAtlas(mActivity.getTextureManager(),32,32);
@@ -157,12 +168,13 @@ public class GameScene implements ISceneCreator  {
 	}
 	
 	public void createScene(SceneManager sceneManager) {
-		//adjustment
-		
+		//adjustment	
 		final int centerX=(ConstantsList.CAMERA_WIDTH - playerAtlas.getWidth())/2;
 		final int centerY=(ConstantsList.CAMERA_HEIGHT - playerAtlas.getHeight())/2;	
 		this.vertextBufferObjectManager = mActivity.getVertexBufferObjectManager();
 		this.manager = sceneManager;
+		
+		
 		 //background
 		 final AutoParallaxBackground autoParallaxBackground = new AutoParallaxBackground(0, 0, 0, 5);
 		 autoParallaxBackground.attachParallaxEntity(new ParallaxEntity(0.0f, new Sprite(0, ConstantsList.CAMERA_HEIGHT - 
@@ -188,12 +200,14 @@ public class GameScene implements ISceneCreator  {
 		 mScene.setTouchAreaBindingOnActionDownEnabled(true);
 		 mScene.attachChild(pauseButton);
 		 this.pauseButton = pauseButton;
+		 
 		 //player
 		 final Sprite userPlayer = new Sprite(centerX, centerY, this.submarineRegion,this.vertextBufferObjectManager);
 		 physicsHandler = new PhysicsHandler(userPlayer);
 		 userPlayer.registerUpdateHandler(physicsHandler);
 		 mScene.attachChild(userPlayer);
 		this.userPlayer = userPlayer;
+		
 		//enemy
 	    final Enemy goldfish = new Enemy(650,50,this.goldfishRegion,this.vertextBufferObjectManager,-100);
 		goldfish.animation(200);
@@ -201,6 +215,13 @@ public class GameScene implements ISceneCreator  {
 		goldfish.registerUpdateHandler(physicsHand);
 		mScene.attachChild(goldfish);
 		this.goldfish = goldfish;	
+		
+		this.scoreText = new Text(5, 5, this.mFont, "Score: 0", "Score: XXXX".length(), mActivity.getVertexBufferObjectManager());
+		this.scoreText.setBlendFunction(GLES20.GL_SRC_ALPHA, GLES20.GL_ONE_MINUS_SRC_ALPHA);
+		this.scoreText.setAlpha(0.5f);
+		this.mScene.attachChild(this.scoreText);
+		
+		
 		controls();
 		pelletShooting();
 		
@@ -239,8 +260,9 @@ public class GameScene implements ISceneCreator  {
 			public void onClick(ButtonSprite pButtonSprite, float pTouchAreaLocalX,
 					float pTouchAreaLocalY) {
 				//the bullet
-			final Rectangle bullet = new Rectangle(userPlayer.getX()+100,userPlayer.getY()+50, 32, 32, vertextBufferObjectManager);
-				bullet.setColor(1,0,0);
+			// final Rectangle bullet = new Rectangle(userPlayer.getX()+100,userPlayer.getY()+50, 32, 32, vertextBufferObjectManager);
+				final Sprite bullet = new Sprite(userPlayer.getX()+100, userPlayer.getY()+50,pelletRegion,vertextBufferObjectManager);
+				//bullet.setColor(1,0,0);
 				PhysicsHandler bulletHandler = new PhysicsHandler(bullet);
 				bulletHandler.setVelocityX(100);
 				bullet.registerUpdateHandler(bulletHandler);
@@ -252,12 +274,21 @@ public class GameScene implements ISceneCreator  {
 
 					public void onUpdate(final float pSecondsElapsed) {							
 						if(bullet.collidesWith(goldfish)){
+							mScore++;
+							
+							scoreText.setText("Score: " + mScore);
 							mActivity.runOnUpdateThread(new Runnable(){
 
 								@Override
 								public void run() {
 									mScene.detachChild(bullet);
+									bullet.setVisible(false);
+									mScene.detachChild(goldfish);
+									goldfish = null;
 									Log.d("hit!", " ");
+									scoreText.setIgnoreUpdate(true);
+																				
+									
 								}
 								
 							});	 
@@ -266,15 +297,26 @@ public class GameScene implements ISceneCreator  {
 //								//bullet.detachSelf();
 //								//bullet = null;
 //								mScene.detachChild(bullet);
-//								//bullet.setIgnoreUpdate(true);
+//								bullet.setIgnoreUpdate(true);
 //								bullet.clearEntityModifiers();
-//								bullet.clearUpdateHandlers();		
+//								bullet.clearUpdateHandlers();				
+						}
+						if(bullet.getX()>700){
+							mActivity.runOnUpdateThread(new Runnable(){
+
+								@Override
+								public void run() {
+									mScene.detachChild(bullet);
+									
+								}
 								
-						}	
+							});	 
+						}
+							
+							
 					
 					}
-					
-					
+									
 				});					
 			}
 		};
@@ -364,10 +406,8 @@ public class GameScene implements ISceneCreator  {
 		analogOnScreenControl.getControlBase().setScaleCenter(0, 128);
 		analogOnScreenControl.getControlBase().setScale(1.25f);
 		analogOnScreenControl.getControlKnob().setScale(1.25f);
-		analogOnScreenControl.refreshControlKnobPosition();
-				
+		analogOnScreenControl.refreshControlKnobPosition();			
 	}
 	
-
 }
 

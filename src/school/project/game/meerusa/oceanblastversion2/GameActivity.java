@@ -99,7 +99,6 @@ public class GameActivity extends BaseGameActivity
 			                splash.detachSelf();
 			                splash.dispose();
 			                sceneManager.setCurrentScene(ConstantsList.SceneType.MENU);
-			   			 Log.d("------------------------END HERE 2--------------", " ");
 			   			
 					}
 		}));

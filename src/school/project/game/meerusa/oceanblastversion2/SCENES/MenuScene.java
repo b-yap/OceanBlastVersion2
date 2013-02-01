@@ -24,8 +24,6 @@ import org.andengine.opengl.texture.region.TiledTextureRegion;
 import org.andengine.opengl.texture.atlas.bitmap.BitmapTextureAtlas;
 import org.andengine.opengl.texture.atlas.bitmap.BitmapTextureAtlasTextureRegionFactory;
 
-import ViewsExtensions.AnimatedButtonSprite;
-
 import school.project.game.meerusa.oceanblastversion2.ConstantsList;
 import school.project.game.meerusa.oceanblastversion2.SceneManager;
 
